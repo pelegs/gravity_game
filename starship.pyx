@@ -48,15 +48,20 @@ cdef np.ndarray[double, ndim=1] rotate(np.ndarray[double, ndim=1] vec,
 
 class spaceship:
     def __init__(self,
-                 img_file,
+                 img_files,
                  rot_angle = deg2rad(5),
                  power = 5,
                  pos = np.zeros(2),
                  vel = np.zeros(2),
                  dir = np.array([1, 0]).astype(np.float64)):
 
-        self.image = pygame.image.load(img_file)
-        self.active_image = pygame.image.load(img_file)
+        self.normal_image = pygame.image.load(img_files['normal'])
+        self.left_image = pygame.image.load(img_files['left'])
+        self.right_image = pygame.image.load(img_files['right'])
+        self.back_image = pygame.image.load(img_files['back'])
+
+        self.image = pygame.image.load(img_files['normal'])
+        self.active_image = pygame.image.load(img_files['normal'])
 
         self.rot_angle = rot_angle
         self.power = power
@@ -75,17 +80,28 @@ class spaceship:
 
     def accelerate(self, dt=0.1):
         self.vel += self.power * self.dir * dt
+        heading = rad2deg(get_xy_angle(self.dir))
+        self.active_image = pygame.transform.rotate(self.image, 180-heading)
+
+    def return_to_normal_img(self):
+        self.image = self.normal_image
+        heading = rad2deg(get_xy_angle(self.dir))
+        self.active_image = pygame.transform.rotate(self.image, 180-heading)
 
     def move(self, dt=0.1):
         self.pos += self.vel * dt
 
     def handle_keys(self):
+        self.return_to_normal_img()
         key = pygame.key.get_pressed()
         if key[pygame.K_RIGHT]:
+            self.image = self.right_image
             self.rotate(direction=CW)
         elif key[pygame.K_LEFT]:
+            self.image = self.left_image
             self.rotate(direction=CCW)
         if key[pygame.K_UP]:
+            self.image = self.back_image
             self.accelerate()
 
     def draw(self, surface, ref=np.zeros(2)):

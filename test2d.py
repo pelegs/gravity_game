@@ -10,7 +10,12 @@ W, H = 800, 800
 screen = pygame.display.set_mode((W, H))
 
 frame_center = np.array([W/2, H/2])
-ship = spaceship(img_file='imgs/shuttle.png',
+imgs = {'normal': 'imgs/shuttle.png',
+        'left': 'imgs/shuttle_left.png',
+        'right': 'imgs/shuttle_right.png',
+        'back': 'imgs/shuttle_back.png'
+        }
+ship = spaceship(img_files = imgs,
                  pos = frame_center)
 
 clock = pygame.time.Clock()
