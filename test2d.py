@@ -8,6 +8,7 @@ from libgrav import *
 pygame.init()
 W, H = 800, 800
 screen = pygame.display.set_mode((W, H))
+x0, y0 = 0., 200.
 
 frame_center = np.array([W/2, H/2])
 imgs = {'normal': 'imgs/shuttle.png',
@@ -16,15 +17,16 @@ imgs = {'normal': 'imgs/shuttle.png',
         'back': 'imgs/shuttle_back.png'
         }
 ship = spaceship(img_files = imgs,
-                 pos = frame_center + np.array([300,0]),
-                 vel = np.array([0, 10]).astype(np.float64),
+                 pos = frame_center + np.array([x0,y0]),
                  power = 5)
 asteroid = body(img_file = 'imgs/asteroid.png',
                 pos = frame_center.copy(),
                 mass = 20000)
-
-
 G_univ = 10
+r0 = np.linalg.norm(ship.pos - asteroid.pos)
+vx = np.sqrt(G_univ*asteroid.mass/r0) * 0.9995
+vy = 0.0
+ship.vel = np.array([vx, vy]).astype(np.float64)
 
 clock = pygame.time.Clock()
 
@@ -40,7 +42,7 @@ while running:
                 pygame.quit()
 
     ship.handle_keys()
-    ship.move(asteroid, G=G_univ, dt=0.1)
+    ship.move(asteroid, G=G_univ, dt=0.01)
 
     # Get orbit shape
     r1 = ship.pos - asteroid.pos
@@ -67,6 +69,6 @@ while running:
 
     pygame.display.update()
 
-    print('\r{:0.4f}'.format(eccentricity(ship, asteroid, G_univ)), end='')
+    print('\r{:0.4f}, {:0.4f}'.format(ship.vel[0], ship.vel[1]), end='')
 
     clock.tick(60)
