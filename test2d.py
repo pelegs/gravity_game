@@ -2,7 +2,7 @@
 
 import numpy as np
 import pygame
-from libgrav import spaceship, body, eccentricity
+from libgrav import *
 
 
 pygame.init()
@@ -17,6 +17,7 @@ imgs = {'normal': 'imgs/shuttle.png',
         }
 ship = spaceship(img_files = imgs,
                  pos = frame_center + np.array([300,0]),
+                 vel = np.array([0, 10]).astype(np.float64),
                  power = 5)
 asteroid = body(img_file = 'imgs/asteroid.png',
                 pos = frame_center.copy(),
@@ -39,13 +40,29 @@ while running:
                 pygame.quit()
 
     ship.handle_keys()
+    ship.move(asteroid, G=G_univ, dt=0.1)
 
+    # Get orbit shape
+    r1 = ship.pos - asteroid.pos
+    perp_vec = py_rotate(ship.vel, np.pi/2)
+    a, b = ellipse_axes(ship, asteroid, G_univ)
+    r1_angle = np.arctan2(r1[1], r1[0])
+
+    c = clockwise(r1, perp_vec)
+    da = -c*py_angle_between(r1, perp_vec)
+    r2 = -py_rotate(r1, 2*da)
+    make_norm(r2, 2*a - np.linalg.norm(r1))
+
+    second_center = ship.pos + r2
+    r12_angle = -get_angle(second_center - asteroid.pos)
+    ellipse_center = 0.5*(asteroid.pos + second_center)
+    ellipse_list = get_ellipse(ellipse_center, a, b, r12_angle, 1000)
+
+    # Draw stuff
     screen.fill((0,0,0))
-
-    asteroid.draw(screen)
-
-    ship.gravity(asteroid, G=G_univ, dt=0.1)
-    ship.move()
+    for point in ellipse_list:
+        pygame.draw.circle(screen, (55,0,150), point.astype(int), 1, 0)
+    pygame.draw.circle(screen, (255, 0, 0), asteroid.pos.astype(int), 15, 0)
     ship.draw(screen)
 
     pygame.display.update()

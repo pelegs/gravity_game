@@ -287,15 +287,28 @@ def py_angle_between(v1, v2):
 def clockwise(v1, v2):
     return c_clockwise(v1, v2)
 
-def create_vec(norm, angle):
-    return norm * np.array([cos(angle), sin(angle)])
-
-def py_rotate(vec, angle):
-    return rotate(vec, angle)
-
 def make_norm(vec, scale):
     vec /= norm(vec)
     vec *= scale
 
-def pyrotate(vec, angle):
+def py_rotate(vec, angle):
     return rotate(vec, angle)
+
+cdef np.ndarray[double, ndim=2] c_get_ellipse(np.ndarray[double, ndim=1] center,
+                                              double a, double b, double angle,
+                                              int num_points):
+    cdef np.ndarray[double, ndim=1] ts = np.linspace(0, 2*pi, num_points).astype(np.float64)
+    cdef np.ndarray[double, ndim=2] points = np.zeros(shape=(num_points, 2))
+    cdef double r
+    cdef int i
+    for i in range(num_points):
+        c = cos(ts[i])
+        s = sin(ts[i])
+        r = 2*a*b/sqrt((2*b*c)**2+(a*s)**2)
+        points[i][0] = r * c
+        points[i][1] = r * s
+        points[i] = rotate(points[i], angle) + center
+    return points
+
+def get_ellipse(center, a, b, angle, num_points=100):
+    return c_get_ellipse(center, a, b, angle, num_points)
