@@ -2,8 +2,12 @@
 
 import numpy as np
 import pygame
+import sys
 from libgrav import *
 
+
+power = float(sys.argv[1])
+ang_power = float(sys.argv[2])
 
 pygame.init()
 W, H = 800, 800
@@ -18,7 +22,8 @@ imgs = {'normal': 'imgs/shuttle.png',
         }
 ship = spaceship(img_files = imgs,
                  pos = frame_center + np.array([x0,y0]),
-                 power = 5)
+                 power = power,
+                 ang_power = ang_power)
 asteroid = body(img_file = 'imgs/asteroid.png',
                 pos = frame_center.copy(),
                 mass = 20000)
@@ -42,7 +47,7 @@ while running:
                 pygame.quit()
 
     ship.handle_keys()
-    ship.move(asteroid, G=G_univ, dt=0.01)
+    ship.move(asteroid, G=G_univ, dt=0.1)
 
     # Get orbit shape
     r1 = ship.pos - asteroid.pos
@@ -69,6 +74,7 @@ while running:
 
     pygame.display.update()
 
-    print('\r{:0.4f}, {:0.4f}'.format(ship.vel[0], ship.vel[1]), end='')
+    #print('\r{:0.4f}, {:0.4f}'.format(ship.vel[0], ship.vel[1]), end='')
+    print('\r{:0.4f}, ({:0.4f}, {:0.4f})'.format(ship.ang_vel, ship.dir[0], ship.dir[1]), end='')
 
     clock.tick(60)

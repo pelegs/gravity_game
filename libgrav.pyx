@@ -129,8 +129,8 @@ cdef double kinetic_energy(np.ndarray[double, ndim=1] v,
 class spaceship:
     def __init__(self,
                  img_files,
-                 rot_angle = deg2rad(5),
                  power = 5,
+                 ang_power = 0.1,
                  pos = np.zeros(2),
                  vel = np.zeros(2),
                  dir = np.array([1, 0]).astype(np.float64)):
@@ -143,11 +143,15 @@ class spaceship:
         self.image = pygame.image.load(img_files['normal'])
         self.active_image = pygame.image.load(img_files['normal'])
 
-        self.rot_angle = rot_angle
+        # Linear translation
         self.power = power
         self.pos = pos
         self.vel = vel
+
+        # Angular translation
+        self.ang_power = ang_power
         self.dir = dir
+        self.ang_vel = .0
 
         # Aligning ship
         self.rotate(direction=CW)
@@ -159,9 +163,7 @@ class spaceship:
         self.active_image = pygame.transform.rotate(self.image, 180-heading)
 
     def rotate(self, direction=CW):
-        self.dir = rotate(self.dir, self.rot_angle*direction)
-        heading = rad2deg(get_xy_angle(self.dir))
-        self.active_image = pygame.transform.rotate(self.image, 180-heading)
+        self.ang_vel += 0.01 * direction
 
     def accelerate(self, dt=0.1):
         self.vel += self.power * self.dir * dt
@@ -169,13 +171,16 @@ class spaceship:
         self.active_image = pygame.transform.rotate(self.image, 180-heading)
 
     def move(self, obj, G, dt=0.1):
+        # Linear inertia
         acc1 = np.zeros(2).astype(np.float64)
         acc2 = np.zeros(2).astype(np.float64)
-
         acc1 = gravity_acc(self.pos, obj.pos, obj.mass, G)
         self.pos += self.vel*dt + 0.5 * acc1 * dt**2
         acc2 = gravity_acc(self.pos, obj.pos, obj.mass, G)
         self.vel += 0.5 * (acc1 + acc2) * dt
+
+        # Angular intertia
+        self.dir = rotate(self.dir, self.ang_vel*self.ang_power)
 
     def handle_keys(self):
         self.return_to_normal_img()
@@ -191,6 +196,10 @@ class spaceship:
             self.accelerate()
 
     def draw(self, surface, ref=np.zeros(2)):
+        # Rotation
+        heading = rad2deg(get_xy_angle(self.dir))
+        self.active_image = pygame.transform.rotate(self.image, 180-heading)
+        # Position
         pos = (self.pos + ref).astype(int)
         surface.blit(self.active_image, pos)
 
